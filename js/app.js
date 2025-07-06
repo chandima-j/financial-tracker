@@ -24,6 +24,8 @@ let deferredPrompt;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('Smart Finance Tracker initializing...');
+  
   loadTransactions();
   loadRecurringPayments();
   loadCurrencySettings();
@@ -34,23 +36,48 @@ document.addEventListener('DOMContentLoaded', function() {
   updateDashboard();
   registerServiceWorker();
   setupInstallPrompt();
+  
+  console.log('App initialization complete');
 });
 
 function setupEventListeners() {
-  document.getElementById('transactionForm').addEventListener('submit', addTransaction);
-  document.getElementById('transactionType').addEventListener('change', updateCategorySelector);
+  console.log('Setting up event listeners...');
+  
+  const transactionForm = document.getElementById('transactionForm');
+  if (transactionForm) {
+    console.log('Transaction form found, adding submit listener');
+    transactionForm.addEventListener('submit', addTransaction);
+  } else {
+    console.error('Transaction form not found!');
+  }
+  
+  const transactionType = document.getElementById('transactionType');
+  if (transactionType) {
+    console.log('Transaction type selector found, adding change listener');
+    transactionType.addEventListener('change', updateCategorySelector);
+  } else {
+    console.error('Transaction type selector not found!');
+  }
   
   // Add recurring payment form listener
   const recurringForm = document.getElementById('recurringPaymentForm');
   if (recurringForm) {
+    console.log('Recurring payment form found, adding submit listener');
     recurringForm.addEventListener('submit', addRecurringPayment);
+  } else {
+    console.error('Recurring payment form not found!');
   }
 
   // Add currency selector listener
   const currencySelector = document.getElementById('currencySelector');
   if (currencySelector) {
+    console.log('Currency selector found, adding change listener');
     currencySelector.addEventListener('change', changeCurrency);
+  } else {
+    console.error('Currency selector not found!');
   }
+  
+  console.log('Event listeners setup complete');
 }
 
 function populateCategories() {
@@ -101,6 +128,9 @@ function updateCategorySelector() {
   const selector = document.getElementById('categorySelector');
   selector.innerHTML = '';
   
+  console.log('Updating category selector for type:', type);
+  console.log('Available categories:', categories[type]);
+  
   categories[type].forEach(category => {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -109,12 +139,16 @@ function updateCategorySelector() {
     btn.onclick = () => selectCategory(btn);
     selector.appendChild(btn);
   });
+  
+  console.log('Category buttons created:', selector.children.length);
 }
 
 function selectCategory(clickedBtn) {
   const buttons = clickedBtn.parentElement.querySelectorAll('.category-btn');
   buttons.forEach(btn => btn.classList.remove('selected'));
   clickedBtn.classList.add('selected');
+  
+  console.log('Category selected:', clickedBtn.textContent);
 }
 
 function setDefaultDate() {
@@ -131,8 +165,31 @@ function addTransaction(e) {
   const selectedCategory = document.querySelector('.category-btn.selected');
   const date = document.getElementById('date').value;
   
-  if (!description || isNaN(amount) || !selectedCategory || !date) {
-    alert('Please fill in all fields and select a category');
+  console.log('Form submission debug:', {
+    type,
+    description,
+    amount,
+    selectedCategory: selectedCategory ? selectedCategory.textContent : 'none',
+    date
+  });
+  
+  if (!description) {
+    alert('Please enter a description');
+    return;
+  }
+  
+  if (isNaN(amount) || amount <= 0) {
+    alert('Please enter a valid amount');
+    return;
+  }
+  
+  if (!selectedCategory) {
+    alert('Please select a category');
+    return;
+  }
+  
+  if (!date) {
+    alert('Please select a date');
     return;
   }
 
@@ -147,6 +204,8 @@ function addTransaction(e) {
     timestamp: new Date().toISOString()
   };
 
+  console.log('Adding transaction:', transaction);
+
   transactions.push(transaction);
   saveTransactions();
   updateDashboard();
@@ -154,6 +213,8 @@ function addTransaction(e) {
   document.getElementById('transactionForm').reset();
   setDefaultDate();
   updateCategorySelector();
+  
+  console.log('Transaction added successfully. Total transactions:', transactions.length);
 }
 
 function addRecurringPayment(e) {
