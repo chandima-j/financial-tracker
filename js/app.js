@@ -26,18 +26,31 @@ let deferredPrompt;
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Smart Finance Tracker initializing...');
   
-  loadTransactions();
-  loadRecurringPayments();
-  loadCurrencySettings();
-  setupEventListeners();
-  populateCategories();
-  populateCurrencySelector();
-  setDefaultDate();
-  updateDashboard();
-  registerServiceWorker();
-  setupInstallPrompt();
-  
-  console.log('App initialization complete');
+  try {
+    loadTransactions();
+    loadRecurringPayments();
+    loadCurrencySettings();
+    setupEventListeners();
+    populateCategories();
+    populateCurrencySelector();
+    setDefaultDate();
+    updateDashboard();
+    registerServiceWorker();
+    setupInstallPrompt();
+    
+    console.log('App initialization complete');
+    
+    // Test if functions are working
+    console.log('Testing function availability:');
+    console.log('- updateDashboard:', typeof updateDashboard);
+    console.log('- updateCharts:', typeof updateCharts);
+    console.log('- formatCurrency:', typeof formatCurrency);
+    console.log('- transactions:', window.transactions);
+    console.log('- selectedCurrency:', window.selectedCurrency);
+    
+  } catch (error) {
+    console.error('Error during app initialization:', error);
+  }
 });
 
 function setupEventListeners() {
@@ -743,4 +756,26 @@ window.deleteRecurringPayment = deleteRecurringPayment;
 window.toggleRecurringPayment = toggleRecurringPayment;
 window.changeCurrency = changeCurrency;
 window.installApp = installApp;
-window.closeInstallPrompt = closeInstallPrompt; 
+window.closeInstallPrompt = closeInstallPrompt;
+window.testUpdates = testUpdates;
+
+// Test function for debugging
+function testUpdates() {
+  console.log('=== TESTING UPDATES ===');
+  console.log('Current transactions:', window.transactions);
+  console.log('Current currency:', window.selectedCurrency);
+  
+  try {
+    console.log('Calling updateDashboard...');
+    updateDashboard();
+    console.log('Dashboard update completed');
+    
+    console.log('Calling updateCharts...');
+    updateCharts();
+    console.log('Charts update completed');
+    
+    console.log('=== TEST COMPLETE ===');
+  } catch (error) {
+    console.error('Test failed:', error);
+  }
+} 

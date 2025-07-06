@@ -200,4 +200,9 @@ function updateTrendChart() {
   });
   
   console.log('Trend chart updated successfully');
-} 
+}
+
+// Make functions globally available
+window.updateCharts = updateCharts;
+window.updateCategoryChart = updateCategoryChart;
+window.updateTrendChart = updateTrendChart; 
