@@ -4,6 +4,9 @@ let trendChart = null;
 
 function updateCharts() {
   console.log('Updating charts...');
+  console.log('Global transactions:', window.transactions);
+  console.log('Global selectedCurrency:', window.selectedCurrency);
+  
   updateCategoryChart();
   updateTrendChart();
 }
@@ -20,7 +23,7 @@ function updateCategoryChart() {
     categoryChart.destroy();
   }
 
-  const expenses = transactions.filter(t => t.type === 'expense');
+  const expenses = window.transactions.filter(t => t.type === 'expense');
   if (expenses.length === 0) {
     ctx.parentElement.innerHTML = '<p class="empty-state">No expense data to display</p>';
     console.log('No expense data for category chart');
@@ -102,7 +105,7 @@ function updateTrendChart() {
     trendChart.destroy();
   }
 
-  if (transactions.length === 0) {
+  if (window.transactions.length === 0) {
     ctx.parentElement.innerHTML = '<p class="empty-state">No transaction data to display</p>';
     console.log('No transaction data for trend chart');
     return;
@@ -110,7 +113,7 @@ function updateTrendChart() {
 
   // Group by month
   const monthlyData = {};
-  transactions.forEach(transaction => {
+  window.transactions.forEach(transaction => {
     const date = new Date(transaction.date);
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     

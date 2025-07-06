@@ -1,8 +1,8 @@
-// App state
-let transactions = [];
-let recurringPayments = [];
-let selectedCurrency = 'LKR'; // Default to Sri Lankan Rupee
-let currencies = {
+// App state - Make these globally accessible
+window.transactions = [];
+window.recurringPayments = [];
+window.selectedCurrency = 'LKR'; // Default to Sri Lankan Rupee
+window.currencies = {
   'LKR': { symbol: 'Rs', name: 'Sri Lankan Rupee', position: 'before' },
   'USD': { symbol: '$', name: 'US Dollar', position: 'before' },
   'EUR': { symbol: '€', name: 'Euro', position: 'before' },
@@ -15,7 +15,7 @@ let currencies = {
   'MYR': { symbol: 'RM', name: 'Malaysian Ringgit', position: 'before' }
 };
 
-let categories = {
+window.categories = {
   expense: ['Food & Dining', 'Transportation', 'Shopping', 'Entertainment', 'Healthcare', 'Utilities', 'Housing', 'Leasing', 'Insurance', 'Subscriptions', 'Education', 'Travel', 'Other'],
   income: ['Salary', 'Freelance', 'Investment', 'Business', 'Gift', 'Other']
 };
@@ -619,47 +619,60 @@ function updateInsights() {
 function showTab(tabName) {
   console.log('Switching to tab:', tabName);
   
-  // Hide all tab contents
-  document.querySelectorAll('.tab-content').forEach(content => {
-    content.classList.remove('active');
-  });
-  
-  // Remove active class from all tabs
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Show selected tab content
-  const selectedTab = document.getElementById(tabName);
-  if (selectedTab) {
-    selectedTab.classList.add('active');
-  } else {
-    console.error('Tab not found:', tabName);
-  }
-  
-  // Add active class to clicked tab
-  event.target.classList.add('active');
-  
-  // Update specific content based on tab
-  if (tabName === 'dashboard') {
-    console.log('Updating dashboard tab');
-    updateDashboard();
-  } else if (tabName === 'transactions') {
-    console.log('Updating transactions tab');
-    updateTransactionsList();
-  } else if (tabName === 'analytics') {
-    console.log('Updating analytics tab');
-    updateDashboard(); // This will update charts
-  } else if (tabName === 'forecast') {
-    console.log('Updating forecast tab');
-    if (typeof updateForecast === 'function') {
-      updateForecast();
+  try {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.remove('active');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const selectedTab = document.getElementById(tabName);
+    if (selectedTab) {
+      selectedTab.classList.add('active');
     } else {
-      console.warn('updateForecast function not found');
+      console.error('Tab not found:', tabName);
     }
-  } else if (tabName === 'recurring') {
-    console.log('Updating recurring tab');
-    updateRecurringPaymentsList();
+    
+    // Add active class to clicked tab
+    event.target.classList.add('active');
+    
+    // Update specific content based on tab
+    if (tabName === 'dashboard') {
+      console.log('Updating dashboard tab');
+      updateDashboard();
+    } else if (tabName === 'transactions') {
+      console.log('Updating transactions tab');
+      updateTransactionsList();
+    } else if (tabName === 'analytics') {
+      console.log('Updating analytics tab');
+      // Force a small delay to ensure DOM is ready
+      setTimeout(() => {
+        updateDashboard(); // This will update charts
+        if (typeof updateCharts === 'function') {
+          console.log('Calling updateCharts function...');
+          updateCharts();
+        } else {
+          console.error('updateCharts function not found!');
+        }
+      }, 100);
+    } else if (tabName === 'forecast') {
+      console.log('Updating forecast tab');
+      if (typeof updateForecast === 'function') {
+        updateForecast();
+      } else {
+        console.warn('updateForecast function not found');
+      }
+    } else if (tabName === 'recurring') {
+      console.log('Updating recurring tab');
+      updateRecurringPaymentsList();
+    }
+  } catch (error) {
+    console.error('Error switching to tab:', tabName, error);
   }
 }
 
