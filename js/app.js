@@ -207,9 +207,21 @@ function addTransaction(e) {
   console.log('Adding transaction:', transaction);
 
   transactions.push(transaction);
+  console.log('Transaction added. Total transactions:', transactions.length);
+  
+  // Save and update
   saveTransactions();
   updateDashboard();
-  updateCharts();
+  
+  // Only update charts if on analytics tab
+  const analyticsTab = document.getElementById('analytics');
+  if (analyticsTab && analyticsTab.classList.contains('active')) {
+    if (typeof updateCharts === 'function') {
+      updateCharts();
+    }
+  }
+  
+  // Reset form
   document.getElementById('transactionForm').reset();
   setDefaultDate();
   updateCategorySelector();
@@ -348,72 +360,112 @@ function saveCurrencySettings() {
 }
 
 function updateDashboard() {
-  // Process recurring payments first
-  processRecurringPayments();
+  console.log('Updating dashboard...');
   
-  const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
-  const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
-  const net = income - expenses;
-  
-  // Calculate monthly recurring expenses
-  const monthlyRecurring = recurringPayments
-    .filter(r => r.isActive)
-    .reduce((sum, r) => sum + r.amount, 0);
+  try {
+    // Process recurring payments first
+    processRecurringPayments();
+    
+    const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+    const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+    const net = income - expenses;
+    
+    // Calculate monthly recurring expenses
+    const monthlyRecurring = recurringPayments
+      .filter(r => r.isActive)
+      .reduce((sum, r) => sum + r.amount, 0);
 
-  document.getElementById('totalIncome').textContent = formatCurrency(income);
-  document.getElementById('totalExpenses').textContent = formatCurrency(expenses);
-  document.getElementById('netAmount').textContent = formatCurrency(net);
-  document.getElementById('transactionsCount').textContent = transactions.length;
-  
-  // Update recurring payments display
-  const recurringElement = document.getElementById('monthlyRecurring');
-  if (recurringElement) {
-    recurringElement.textContent = formatCurrency(monthlyRecurring);
+    console.log('Dashboard calculations:', { income, expenses, net, monthlyRecurring, transactionCount: transactions.length });
+
+    const totalIncomeEl = document.getElementById('totalIncome');
+    const totalExpensesEl = document.getElementById('totalExpenses');
+    const netAmountEl = document.getElementById('netAmount');
+    const transactionsCountEl = document.getElementById('transactionsCount');
+    
+    if (totalIncomeEl) totalIncomeEl.textContent = formatCurrency(income);
+    if (totalExpensesEl) totalExpensesEl.textContent = formatCurrency(expenses);
+    if (netAmountEl) netAmountEl.textContent = formatCurrency(net);
+    if (transactionsCountEl) transactionsCountEl.textContent = transactions.length;
+    
+    // Update recurring payments display
+    const recurringElement = document.getElementById('monthlyRecurring');
+    if (recurringElement) {
+      recurringElement.textContent = formatCurrency(monthlyRecurring);
+    }
+
+    // Update currency display
+    const currencyElement = document.getElementById('currentCurrency');
+    if (currencyElement) {
+      currencyElement.textContent = selectedCurrency;
+    }
+
+    updateTransactionsList();
+    updateInsights();
+    updateRecurringPaymentsList();
+    
+    // Only update charts if we're on the analytics tab
+    const analyticsTab = document.getElementById('analytics');
+    if (analyticsTab && analyticsTab.classList.contains('active')) {
+      console.log('Updating charts...');
+      if (typeof updateCharts === 'function') {
+        updateCharts();
+      } else {
+        console.warn('updateCharts function not found');
+      }
+    }
+    
+    console.log('Dashboard update complete');
+  } catch (error) {
+    console.error('Error updating dashboard:', error);
   }
-
-  // Update currency display
-  const currencyElement = document.getElementById('currentCurrency');
-  if (currencyElement) {
-    currencyElement.textContent = selectedCurrency;
-  }
-
-  updateTransactionsList();
-  updateInsights();
-  updateRecurringPaymentsList();
 }
 
 function updateTransactionsList() {
-  const container = document.getElementById('transactionsList');
+  console.log('Updating transactions list...');
   
-  if (transactions.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <i class="fas fa-receipt"></i>
-        <p>No transactions yet. Add your first transaction to get started!</p>
-      </div>
-    `;
-    return;
-  }
-
-  const sortedTransactions = transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-  
-  container.innerHTML = sortedTransactions.map(transaction => `
-    <div class="transaction-item ${transaction.type} ${transaction.isRecurring ? 'recurring' : ''}">
-      <div class="transaction-info">
-        <div class="transaction-amount ${transaction.type}">
-          ${transaction.type === 'expense' ? '-' : '+'}${formatCurrency(transaction.amount)}
-          ${transaction.isRecurring ? '<i class="fas fa-sync-alt recurring-icon"></i>' : ''}
+  try {
+    const container = document.getElementById('transactionsList');
+    if (!container) {
+      console.warn('transactionsList container not found');
+      return;
+    }
+    
+    if (transactions.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-receipt"></i>
+          <p>No transactions yet. Add your first transaction to get started!</p>
         </div>
-        <div>${transaction.description}</div>
-        <div class="transaction-category">${transaction.category} • ${new Date(transaction.date).toLocaleDateString()}</div>
+      `;
+      console.log('No transactions to display');
+      return;
+    }
+
+    const sortedTransactions = transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+    console.log('Displaying', sortedTransactions.length, 'transactions');
+    
+    container.innerHTML = sortedTransactions.map(transaction => `
+      <div class="transaction-item ${transaction.type} ${transaction.isRecurring ? 'recurring' : ''}">
+        <div class="transaction-info">
+          <div class="transaction-amount ${transaction.type}">
+            ${transaction.type === 'expense' ? '-' : '+'}${formatCurrency(transaction.amount)}
+            ${transaction.isRecurring ? '<i class="fas fa-sync-alt recurring-icon"></i>' : ''}
+          </div>
+          <div>${transaction.description}</div>
+          <div class="transaction-category">${transaction.category} • ${new Date(transaction.date).toLocaleDateString()}</div>
+        </div>
+        <div class="transaction-actions">
+          <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${transaction.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
       </div>
-      <div class="transaction-actions">
-        <button class="btn btn-danger btn-sm" onclick="deleteTransaction(${transaction.id})">
-          <i class="fas fa-trash"></i>
-        </button>
-      </div>
-    </div>
-  `).join('');
+    `).join('');
+    
+    console.log('Transactions list updated successfully');
+  } catch (error) {
+    console.error('Error updating transactions list:', error);
+  }
 }
 
 function updateRecurringPaymentsList() {
@@ -551,6 +603,8 @@ function updateInsights() {
 }
 
 function showTab(tabName) {
+  console.log('Switching to tab:', tabName);
+  
   // Hide all tab contents
   document.querySelectorAll('.tab-content').forEach(content => {
     content.classList.remove('active');
@@ -562,23 +616,35 @@ function showTab(tabName) {
   });
   
   // Show selected tab content
-  document.getElementById(tabName).classList.add('active');
+  const selectedTab = document.getElementById(tabName);
+  if (selectedTab) {
+    selectedTab.classList.add('active');
+  } else {
+    console.error('Tab not found:', tabName);
+  }
   
   // Add active class to clicked tab
   event.target.classList.add('active');
   
-  // Update charts when switching to analytics tab
-  if (tabName === 'analytics') {
-    updateCharts();
-  }
-  
-  // Update forecast when switching to forecast tab
-  if (tabName === 'forecast') {
-    updateForecast();
-  }
-  
-  // Update recurring payments when switching to recurring tab
-  if (tabName === 'recurring') {
+  // Update specific content based on tab
+  if (tabName === 'dashboard') {
+    console.log('Updating dashboard tab');
+    updateDashboard();
+  } else if (tabName === 'transactions') {
+    console.log('Updating transactions tab');
+    updateTransactionsList();
+  } else if (tabName === 'analytics') {
+    console.log('Updating analytics tab');
+    updateDashboard(); // This will update charts
+  } else if (tabName === 'forecast') {
+    console.log('Updating forecast tab');
+    if (typeof updateForecast === 'function') {
+      updateForecast();
+    } else {
+      console.warn('updateForecast function not found');
+    }
+  } else if (tabName === 'recurring') {
+    console.log('Updating recurring tab');
     updateRecurringPaymentsList();
   }
 }
