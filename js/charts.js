@@ -3,13 +3,17 @@ let categoryChart = null;
 let trendChart = null;
 
 function updateCharts() {
+  console.log('Updating charts...');
   updateCategoryChart();
   updateTrendChart();
 }
 
 function updateCategoryChart() {
   const ctx = document.getElementById('categoryChart');
-  if (!ctx) return;
+  if (!ctx) {
+    console.warn('categoryChart canvas not found');
+    return;
+  }
 
   // Destroy existing chart
   if (categoryChart) {
@@ -19,6 +23,7 @@ function updateCategoryChart() {
   const expenses = transactions.filter(t => t.type === 'expense');
   if (expenses.length === 0) {
     ctx.parentElement.innerHTML = '<p class="empty-state">No expense data to display</p>';
+    console.log('No expense data for category chart');
     return;
   }
 
@@ -30,6 +35,8 @@ function updateCategoryChart() {
 
   const labels = Object.keys(categoryData);
   const data = Object.values(categoryData);
+
+  console.log('Category chart data:', { labels, data });
 
   // Create color palette
   const colors = [
@@ -70,18 +77,25 @@ function updateCategoryChart() {
               const value = context.parsed;
               const total = context.dataset.data.reduce((a, b) => a + b, 0);
               const percentage = ((value / total) * 100).toFixed(1);
-              return `${label}: ${formatCurrency(value)} (${percentage}%)`;
+              // Use window.formatCurrency if available, otherwise fallback
+              const formattedValue = window.formatCurrency ? window.formatCurrency(value) : `$${value.toFixed(2)}`;
+              return `${label}: ${formattedValue} (${percentage}%)`;
             }
           }
         }
       }
     }
   });
+  
+  console.log('Category chart updated successfully');
 }
 
 function updateTrendChart() {
   const ctx = document.getElementById('trendChart');
-  if (!ctx) return;
+  if (!ctx) {
+    console.warn('trendChart canvas not found');
+    return;
+  }
 
   // Destroy existing chart
   if (trendChart) {
@@ -90,6 +104,7 @@ function updateTrendChart() {
 
   if (transactions.length === 0) {
     ctx.parentElement.innerHTML = '<p class="empty-state">No transaction data to display</p>';
+    console.log('No transaction data for trend chart');
     return;
   }
 
@@ -113,6 +128,8 @@ function updateTrendChart() {
   const months = Object.keys(monthlyData).sort();
   const incomeData = months.map(month => monthlyData[month].income);
   const expenseData = months.map(month => monthlyData[month].expenses);
+
+  console.log('Trend chart data:', { months, incomeData, expenseData });
 
   // Format month labels
   const monthLabels = months.map(month => {
@@ -150,7 +167,8 @@ function updateTrendChart() {
           beginAtZero: true,
           ticks: {
             callback: function(value) {
-              return formatCurrency(value);
+              // Use window.formatCurrency if available, otherwise fallback
+              return window.formatCurrency ? window.formatCurrency(value) : `$${value.toFixed(2)}`;
             }
           }
         }
@@ -168,11 +186,15 @@ function updateTrendChart() {
             label: function(context) {
               const label = context.dataset.label || '';
               const value = context.parsed.y;
-              return `${label}: ${formatCurrency(value)}`;
+              // Use window.formatCurrency if available, otherwise fallback
+              const formattedValue = window.formatCurrency ? window.formatCurrency(value) : `$${value.toFixed(2)}`;
+              return `${label}: ${formattedValue}`;
             }
           }
         }
       }
     }
   });
+  
+  console.log('Trend chart updated successfully');
 } 

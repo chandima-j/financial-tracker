@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Status Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .status-panel { background: #f0f0f0; padding: 20px; margin: 20px 0; border-radius: 8px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; }
+    .stat-item { background: white; padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 1.5rem; font-weight: bold; color: #667eea; }
+    .stat-label { font-size: 0.9rem; color: #666; }
+    button { padding: 10px 20px; margin: 5px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .debug-log { background: #000; color: #0f0; padding: 10px; font-family: monospace; height: 200px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Status Test</h1>
+  
+  <div class="status-panel">
+    <h3>Current Status</h3>
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="statusIncome">Rs0.00</div>
+        <div class="stat-label">Total Income</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statusExpenses">Rs0.00</div>
+        <div class="stat-label">Total Expenses</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statusNet">Rs0.00</div>
+        <div class="stat-label">Net Amount</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="statusCount">0</div>
+        <div class="stat-label">Transactions</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="status-panel">
+    <h3>Test Actions</h3>
+    <button onclick="addTestTransaction('income', 1000)">Add Income Rs1000</button>
+    <button onclick="addTestTransaction('expense', 500)">Add Expense Rs500</button>
+    <button onclick="changeTestCurrency()">Change Currency</button>
+    <button onclick="clearTestData()">Clear All</button>
+  </div>
+  
+  <div class="status-panel">
+    <h3>Debug Log</h3>
+    <div id="statusLog" class="debug-log"></div>
+  </div>
+
+  <script>
+    // Test data
+    let testTransactions = [];
+    let testCurrency = 'LKR';
+    let testCurrencies = {
+      'LKR': { symbol: 'Rs', name: 'Sri Lankan Rupee', position: 'before' },
+      'USD': { symbol: '$', name: 'US Dollar', position: 'before' },
+      'EUR': { symbol: '€', name: 'Euro', position: 'before' }
+    };
+    
+    // Debug logging
+    function log(message) {
+      const logDiv = document.getElementById('statusLog');
+      const timestamp = new Date().toLocaleTimeString();
+      logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    // Currency formatting
+    function formatTestCurrency(amount) {
+      const currency = testCurrencies[testCurrency];
+      if (!currency) return `${amount.toFixed(2)}`;
+      
+      const formattedAmount = amount.toFixed(2);
+      if (currency.position === 'before') {
+        return `${currency.symbol}${formattedAmount}`;
+      } else {
+        return `${formattedAmount}${currency.symbol}`;
+      }
+    }
+
+    // Update status
+    function updateTestStatus() {
+      log('Updating test status...');
+      
+      const income = testTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const expenses = testTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+      const net = income - expenses;
+      
+      log(`Calculations: Income=${income}, Expenses=${expenses}, Net=${net}, Count=${testTransactions.length}`);
+      
+      document.getElementById('statusIncome').textContent = formatTestCurrency(income);
+      document.getElementById('statusExpenses').textContent = formatTestCurrency(expenses);
+      document.getElementById('statusNet').textContent = formatTestCurrency(net);
+      document.getElementById('statusCount').textContent = testTransactions.length;
+      
+      log('Status update complete');
+    }
+
+    // Add test transaction
+    function addTestTransaction(type, amount) {
+      const transaction = {
+        id: Date.now(),
+        type: type,
+        description: `Test ${type}`,
+        amount: amount,
+        category: 'Test',
+        date: new Date().toISOString().split('T')[0],
+        currency: testCurrency,
+        timestamp: new Date().toISOString()
+      };
+      
+      testTransactions.push(transaction);
+      log(`Added ${type} transaction: ${formatTestCurrency(amount)}`);
+      updateTestStatus();
+    }
+
+    // Change currency
+    function changeTestCurrency() {
+      const currencies = Object.keys(testCurrencies);
+      const currentIndex = currencies.indexOf(testCurrency);
+      const nextIndex = (currentIndex + 1) % currencies.length;
+      testCurrency = currencies[nextIndex];
+      
+      log(`Currency changed to: ${testCurrency}`);
+      updateTestStatus();
+    }
+
+    // Clear data
+    function clearTestData() {
+      testTransactions = [];
+      log('Cleared all test data');
+      updateTestStatus();
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      log('Status test initialized');
+      updateTestStatus();
+    });
+  </script>
+</body>
+</html> 

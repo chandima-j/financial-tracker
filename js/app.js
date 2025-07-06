@@ -105,9 +105,16 @@ function changeCurrency() {
   const selector = document.getElementById('currencySelector');
   if (selector) {
     selectedCurrency = selector.value;
+    console.log('Currency changed to:', selectedCurrency);
     saveCurrencySettings();
     updateDashboard();
-    updateCharts();
+    // Only update charts if on analytics tab
+    const analyticsTab = document.getElementById('analytics');
+    if (analyticsTab && analyticsTab.classList.contains('active')) {
+      if (typeof updateCharts === 'function') {
+        updateCharts();
+      }
+    }
   }
 }
 
@@ -122,6 +129,9 @@ function formatCurrency(amount) {
     return `${formattedAmount}${currency.symbol}`;
   }
 }
+
+// Make formatCurrency globally available for charts
+window.formatCurrency = formatCurrency;
 
 function updateCategorySelector() {
   const type = document.getElementById('transactionType').value;
@@ -209,14 +219,18 @@ function addTransaction(e) {
   transactions.push(transaction);
   console.log('Transaction added. Total transactions:', transactions.length);
   
-  // Save and update
+  // Save and update immediately
   saveTransactions();
+  
+  // Force immediate dashboard update
+  console.log('Forcing dashboard update...');
   updateDashboard();
   
   // Only update charts if on analytics tab
   const analyticsTab = document.getElementById('analytics');
   if (analyticsTab && analyticsTab.classList.contains('active')) {
     if (typeof updateCharts === 'function') {
+      console.log('Updating charts after transaction...');
       updateCharts();
     }
   }
